@@ -3,10 +3,6 @@ import { promisify } from 'util';
 
 const execAsync = promisify(exec);
 
-function timestamp() {
-    return new Date().toISOString().replace('T', ' ').slice(0, 19);
-}
-
 export async function executeBash({ command, cwd }) {
     console.log(`[bash] ${command}`);
     try {

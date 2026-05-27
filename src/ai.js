@@ -1,5 +1,4 @@
 import OpenAI from 'openai';
-import { calculator } from "./tools/tools.js";
 
 // 初始化 DeepSeek 客户端
 const client = new OpenAI({
