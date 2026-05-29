@@ -53,7 +53,6 @@ export async function* completeStream(config) {
 
 export function logMessages(msgType, msg) {
     if (!msg) return;
-    const copyObj = JSON.parse(JSON.stringify(msg));
     console.log(`--- [ ${msgType} ] ---`);
     console.log(JSON.stringify(msg, null, 2));
 }
