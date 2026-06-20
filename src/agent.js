@@ -1,4 +1,5 @@
 import { completeStream } from './ai.js';
+import { compact, calculateContextTokens } from './core/compaction/compaction.js';
 
 const MAX_TURNS = 50;
 
@@ -6,11 +7,42 @@ export class Agent {
     messages = [];
     tools = [];
     onEvent = null;
+    compactionEnabled = true;
+    compactCount = 0;   // 记录压缩次数
 
     constructor(config) {
         this.systemPrompt = config.systemPrompt || '';
         this.tools = config.tools || [];
         this.onEvent = config.onEvent || null;
+        if (config.compactionEnabled === false) {
+            this.compactionEnabled = false;
+        }
+    }
+
+    /**
+     * 检查上下文大小，必要时执行 compaction。
+     * 在 tool call 完成后、下一次 LLM 调用前调用。
+     * @param {object} [options] - 传给 compact 的选项
+     */
+    async _maybeCompact(options = {}) {
+        if (!this.compactionEnabled) return;
+
+        const totalTokens = calculateContextTokens(this.messages);
+        this.onEvent?.('context_check', { totalTokens });
+
+        const result = await compact(this.messages, options);
+
+        if (result.firstKeptIndex === -1) {
+            return; // 不需要压缩
+        }
+
+        this.compactCount++;
+        this.messages = result.messages;
+        this.onEvent?.('compaction_done', {
+            summary: result.summary,
+            tokensBefore: result.tokensBefore,
+            compactCount: this.compactCount,
+        });
     }
 
     async *run(prompt) {
@@ -75,6 +107,9 @@ export class Agent {
                     }
                 }
             }
+
+            // tool call 完成后检查是否需要 compaction
+            await this._maybeCompact();
         }
     }
 }
