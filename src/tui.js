@@ -6,6 +6,7 @@ import {
 import { Agent } from './agent.js';
 import { codingTools } from './tools/tools.js';
 import { loadSkills } from './skill.js';
+import { loadAuthConfig } from './config.js';
 
 // ── Themes ────────────────────────────────────────────────────────
 
@@ -40,6 +41,15 @@ const editorTheme = {
 // ── Start REPL ────────────────────────────────────────────────────
 
 export async function startREPL() {
+    // 检查认证配置
+    try {
+        loadAuthConfig();
+    } catch (err) {
+        console.error(chalk.red('❌ ' + err.message));
+        console.error(chalk.dim('运行 shn init 创建配置文件'));
+        process.exit(1);
+    }
+
     // Load skills
     let skills = [];
     try {

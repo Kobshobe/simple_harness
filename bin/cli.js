@@ -8,6 +8,7 @@
  *   shn tui              启动 TUI REPL
  *   shn web              启动 Web 服务器 (http://localhost:3000)
  *   shn run <p>          单次执行一段 prompt 后退出
+ *   shn init             创建示例认证配置 (~/.shn/agents/auth.json)
  *   shn --help           显示帮助
  *   shn --version        显示版本号
  */
@@ -34,14 +35,27 @@ if (command === '--help' || command === '-h') {
     shn tui              启动交互式 REPL
     shn web              启动 Web 服务器 (http://localhost:3000)
     shn run <p>          单次执行一段 prompt
+    shn init             创建示例认证配置 (~/.shn/agents/auth.json)
     shn --help           显示此帮助
     shn --version        显示版本号
+
+  首次使用:
+    shn init             创建配置文件
+    vim ~/.shn/agents/auth.json  填入 API 密钥
+    shn                  启动
 
   示例:
     shn
     shn web
     shn run "用 js 写一个 hello world"
 `);
+    process.exit(0);
+}
+
+// ── Init ────────────────────────────────────────────────────────────
+if (command === 'init') {
+    const { createSampleConfig } = await import('../src/config.js');
+    createSampleConfig();
     process.exit(0);
 }
 

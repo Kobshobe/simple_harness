@@ -1,28 +1,41 @@
 import OpenAI from 'openai';
+import { loadAuthConfig } from './config.js';
 
-// 初始化 DeepSeek 客户端
-const client = new OpenAI({
-    apiKey: 'sk-c44e213d85364b1a929dd2b9172c5876',
-    baseURL: 'https://api.deepseek.com/v1'
-});
+// 懒初始化：首次调用 API 时从配置文件创建 client
+let _client = null;
+let _model = null;
 
-/**                                                                                                                                                                             
- * 调用 LLM，纯函数，不关心工具、不关心循环                                                                                                                                     
- * @param {object} config                                                                                                                                                       
- * @param {Array}  config.messages       - 消息历史                                                                                                                             
- * @param {string} config.systemPrompt   - 系统提示词 (可选)                                                                                                                    
- * @param {Array}  config.tools          - 工具定义 (可选，OpenAI格式)                                                                                                          
- * @returns {object} { content, toolCalls, stopReason }                                                                                                                         
+function getClient() {
+    if (!_client) {
+        const config = loadAuthConfig();
+        _client = new OpenAI({
+            apiKey: config.apiKey,
+            baseURL: config.baseURL,
+        });
+        _model = config.model;
+    }
+    return { client: _client, model: _model };
+}
+
+/**
+ * 调用 LLM（非流式）
+ * @param {object} config
+ * @param {Array}  config.messages     - 消息历史
+ * @param {string} config.systemPrompt - 系统提示词 (可选)
+ * @param {Array}  config.tools        - 工具定义 (可选，OpenAI格式)
+ * @returns {Promise<object>} { content, toolCalls, stopReason }
  */
 export async function complete(config) {
+    const { client, model } = getClient();
+
     const body = {
-        model: 'deepseek-v4-pro', // DeepSeek v4 模型
+        model,
         messages: [
             ...(config.systemPrompt ? [{ role: 'system', content: config.systemPrompt }] : []),
             ...config.messages
         ],
-        ...(config.tools ? { tools: config.tools } : {})
-    }
+        ...(config.tools ? { tools: config.tools } : {}),
+    };
     config.onEvent?.('request', body);
 
     const completion = await client.chat.completions.create(body);
@@ -32,15 +45,25 @@ export async function complete(config) {
     return msg;
 }
 
+/**
+ * 调用 LLM（流式）
+ * @param {object} config
+ * @param {Array}  config.messages     - 消息历史
+ * @param {string} config.systemPrompt - 系统提示词 (可选)
+ * @param {Array}  config.tools        - 工具定义 (可选，OpenAI格式)
+ * @returns {AsyncGenerator}
+ */
 export async function* completeStream(config) {
+    const { client, model } = getClient();
+
     const body = {
-        model: 'deepseek-v4-pro',
+        model,
         messages: [
             ...(config.systemPrompt ? [{ role: 'system', content: config.systemPrompt }] : []),
             ...config.messages
         ],
         ...(config.tools?.length ? { tools: config.tools } : {}),
-        stream: true,                                                                                                                                           
+        stream: true,
     };
     config.onEvent?.('request', body);
 
@@ -49,7 +72,7 @@ export async function* completeStream(config) {
     for await (const chunk of stream) {
         yield chunk;
     }
-} 
+}
 
 export function logMessages(msgType, msg) {
     if (!msg) return;
