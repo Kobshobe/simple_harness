@@ -1,18 +1,29 @@
 {
-  "name": "simple_harness",
+  "name": "simple-harness",
   "version": "1.0.0",
-  "description": "",
-  "main": "index.js",
+  "description": "轻量级 AI Agent harness，支持流式对话、工具调用、多轮代码修改",
   "type": "module",
+  "bin": {
+    "shn": "./bin/cli.js"
+  },
   "scripts": {
     "tui": "node src/tui.js",
-    "web": "node src/web.js" 
+    "web": "node src/web.js",
+    "cli": "node bin/cli.js",
+    "postinstall": "node bin/cli.js --version"
   },
-  "keywords": [],
+  "keywords": ["ai", "agent", "llm", "harness", "cli"],
   "author": "",
   "license": "MIT",
   "dependencies": {
     "express": "^5.2.1",
     "openai": "^6.38.0"
-  }
+  },
+  "files": [
+    "bin/",
+    "src/",
+    "public/",
+    "skills/",
+    "README.md"
+  ]
 }

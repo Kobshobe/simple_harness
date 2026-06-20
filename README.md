@@ -1,10 +1,6 @@
-# AI Agent Harness 最小实现
+# simple-harness
 
-一个不到 200 行的引擎核心，支持流式对话、工具调用、多轮代码修改。
-
-## 1. 什么是 Harness Engine
-
-Harness 的含义是"马具"——你把 LLM 套上马具，给它工具，它就能干活。
+轻量级 AI Agent harness，支持流式对话、工具调用、多轮代码修改。
 
 核心逻辑一句话：**一个循环，三个部件**。
 
@@ -12,37 +8,64 @@ Harness 的含义是"马具"——你把 LLM 套上马具，给它工具，它�
 用户输入 → [ LLM 思考 → 想调用工具 → 执行工具 → 返回结果 ] × N → 最终回复
 ```
 
-和普通 ChatBot 的区别：ChatBot 一问一答就结束，Harness 会在一个 while 循环里反复"思考-行动"，直到 LLM 认为任务完成。
-
-## 2. 整体架构
-
-```
-tui.js            ← readline REPL，唯一入口
-  ↑ yield
-agent.js          ← 核心循环 + 流合并 (Message 类)
-  ↑ stream
-ai.js             ← DeepSeek API 调用 (OpenAI SDK)
-  ↑ tool calls
-tools/
-  write.js        ← 创建文件
-  read.js         ← 读取文件
-  edit.js         ← 精确编辑
-  bash.js         ← 执行命令
-```
-
-## 3. 运行
+## 快速开始
 
 ```bash
+# 安装依赖
 npm install
 
+# 启动交互式 REPL
 npm run tui
+# 或
+node bin/cli.js
 ```
 
-```
-> 在 .code 目录写一个 hello js 程序
-我来创建一个 hello 程序...
+## CLI 命令
 
-> 加上打印时间
-让我先看看现有代码...
-然后加上时间输出...
+通过 `npm link` 或 `npm install -g` 安装后可直接使用：
+
+```bash
+# 全局安装
+npm link
+
+# 使用
+shn                   # 启动交互式 REPL（默认）
+shn tui               # 启动交互式 REPL
+shn web               # 启动 Web 服务器 (http://localhost:3000)
+shn run <p>           # 单次执行一段 prompt
+shn --help            # 显示帮助
+shn --version         # 显示版本号
 ```
+
+或者不安装，直接用 npm run script：
+
+```bash
+npm run cli               # 启动 REPL
+npm run cli -- web        # 启动 Web
+npm run cli -- run "你好" # 单次执行
+```
+
+## 架构
+
+```
+bin/cli.js          ← CLI 入口 (shebang, 命令名: shn)
+  │
+  ├─ src/tui.js     ← REPL 交互模式
+  ├─ src/web.js     ← Web 服务器 (SSE)
+  └─ src/cli-run.js ← 一次性执行模式
+         │
+         ▼
+src/agent.js        ← 核心循环 (Agent + Message)
+    │
+    ├─ src/ai.js    ← DeepSeek API 调用
+    │
+    └─ src/core/compaction/compaction.js  ← 上下文压缩
+         │
+src/tools/          ← 工具集
+    ├─ read.js      ← 读取文件
+    ├─ write.js     ← 创建文件
+    ├─ edit.js      ← 精确编辑
+    └─ bash.js      ← 执行命令
+
+src/skill.js        ← Skill 加载 (扫描 SKILL.md)
+skills/             ← Skill 目录
