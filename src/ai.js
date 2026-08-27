@@ -2,7 +2,7 @@ import OpenAI from 'openai';
 
 // 初始化 DeepSeek 客户端
 const client = new OpenAI({
-    apiKey: 'sk-c44e213d85364b1a929dd2b9172c5876',
+    apiKey: process.env.DEEPSEEK_API_KEY || 'sk-c44e213d85364b1a929dd2b9172c5876',
     baseURL: 'https://api.deepseek.com/v1'
 });
 

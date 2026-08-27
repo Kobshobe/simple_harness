@@ -6,12 +6,15 @@
   "type": "module",
   "scripts": {
     "tui": "node src/tui.js",
+    "tui-mcp": "node src/tui-mcp.js",
+    "mcp-server": "node src/mcp/server.js",
     "web": "node src/web.js" 
   },
   "keywords": [],
   "author": "",
   "license": "MIT",
   "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.30.0",
     "express": "^5.2.1",
     "openai": "^6.38.0"
   }
